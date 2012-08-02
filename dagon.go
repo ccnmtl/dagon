@@ -26,43 +26,6 @@ type result struct {
 	Cn string
 }
 
-func channel_query(db *ldap.DB, base_dn ldap.ObjectDN, ur ldap.Equal) result {
-	out := make(chan result)
-
-	go func() {
-		err := db.SearchTree(out, base_dn, ur)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-	}()
-	return <- out
-}
-
-func slice_query(db *ldap.DB, base_dn ldap.ObjectDN, ur ldap.Equal) result {
-	out := make([]result,0)
-
-	err := db.SearchTree(&out, base_dn, ur)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	return out[0]
-}
-
-func func_query(db *ldap.DB, base_dn ldap.ObjectDN, ur ldap.Equal) result {
-	ch := make(chan result)
-	out := func (r result) {
-		ch <- r
-	}
-
-	go func() {
-		err := db.SearchTree(out, base_dn, ur)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-	}()
-	return <-ch	
-}
-
 func struct_query(db *ldap.DB, base_dn ldap.ObjectDN, ur ldap.Equal) result {
 	out := result{}
 
