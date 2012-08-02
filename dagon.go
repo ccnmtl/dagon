@@ -28,14 +28,11 @@ type result struct {
 	Cn               string
 }
 
-func struct_query(db *ldap.DB, base_dn ldap.ObjectDN, ur ldap.Equal) result {
+func struct_query(db *ldap.DB, base_dn ldap.ObjectDN, ur ldap.Equal) (result, error) {
 	out := result{}
 
 	err := db.SearchTree(&out, base_dn, ur)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	return out
+	return out, err
 }
 
 // this struct is set up to match our old interface
@@ -75,26 +72,31 @@ func main() {
 	base_dn := ldap.ObjectDN("o=Columbia University, c=us")
 	ur := ldap.Equal{Attr: "uni", Value: []byte(uni)}
 
-	r := struct_query(db, base_dn, ur)
+	r, err := struct_query(db, base_dn, ur)
 
 	or := compatresult{}
-	or.Sn = r.Sn
-	or.GivenName = r.GivenName
-	or.TelephoneNumber = r.TelephoneNumber
-	or.CuMiddlename = r.CuMiddlename
-	or.Uid = strings.Join(r.Uid, ", ")
-	or.Firstname = r.Firstname
-	or.DepartmentNumber = r.DepartmentNumber
-	or.ObjectClass = strings.Join(r.ObjectClass, ", ")
-	or.Lastname = r.Lastname
-	or.Title = r.Title
-	or.Mail = r.Mail
-	or.Campusphone = r.Campusphone
-	or.Uni = r.Uni
-	or.PostalAddress = r.PostalAddress
-	or.Ou = r.Ou
-	or.Cn = r.Cn
-	or.Found = true
+
+	if err != nil {
+		or.Found = false
+	} else {
+		or.Sn = r.Sn
+		or.GivenName = r.GivenName
+		or.TelephoneNumber = r.TelephoneNumber
+		or.CuMiddlename = r.CuMiddlename
+		or.Uid = strings.Join(r.Uid, ", ")
+		or.Firstname = r.Firstname
+		or.DepartmentNumber = r.DepartmentNumber
+		or.ObjectClass = strings.Join(r.ObjectClass, ", ")
+		or.Lastname = r.Lastname
+		or.Title = r.Title
+		or.Mail = r.Mail
+		or.Campusphone = r.Campusphone
+		or.Uni = r.Uni
+		or.PostalAddress = r.PostalAddress
+		or.Ou = r.Ou
+		or.Cn = r.Cn
+		or.Found = true
+	}
 
 	// duplicating the logic from previous python versions
 	// this looks a bit silly, but ensures that we are generating
