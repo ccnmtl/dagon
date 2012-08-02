@@ -4,46 +4,19 @@ import (
 	"github.com/jmckaskill/goldap"
 	"fmt"
 	"os"
+	"strings"
 )
-
-func printer (r string) {
-	fmt.Println("out!")
-	fmt.Printf("%v\n", r)
-}
-
-// {
-//  "telephoneNumber": "+1 212 854 1813",
-//  "telephonenumber": "+1 212 854 1813",
-//  "cuMiddlename": "N.",
-//  "uid": "anp8, anders",
-//  "firstname": "Anders",
-//  "departmentNumber": "2209102",
-//  "objectClass": "person, organizationalPerson, inetOrgPerson, cuPerson, cuRestricted, eduPerson",
-//  "lastname": "Pearson",
-//  "title": "Senior Programmer",
-//  "mail": "anders@columbia.edu",
-//  "campusphone": "MS 4-1813",
-//  "sn": "Pearson",
-//  "uni": "anp8",
-//  "found": true,
-//  "postalAddress": "505 Butler Library$Mail Code: 1130$United States",
-//  "givenName": "Anders",
-//   "ou": "Ctr for New Media Teaching^Ctr for New Media Teaching^Ctr New Media Teach & Lrng",
-//   "cn": "Anders N. Pearson"
-// }
-
 
 type result struct {
 	Sn string
 	GivenName string
 	TelephoneNumber string
-	Telephonenumber string
 	CuMiddlename string
-	Uid string
+	Uid []string
 	Firstname string
 	DepartmentNumber string
-	ObjectClass string
-	LastName string
+	ObjectClass []string
+	Lastname string
 	Title string
 	Mail string
 	Campusphone string
@@ -51,7 +24,6 @@ type result struct {
 	PostalAddress string
 	Ou string
 	Cn string
-	Found bool
 }
 
 func channel_query(db *ldap.DB, base_dn ldap.ObjectDN, ur ldap.Equal) result {
@@ -101,6 +73,28 @@ func struct_query(db *ldap.DB, base_dn ldap.ObjectDN, ur ldap.Equal) result {
 	return out
 }
 
+// this struct is set up to match our old interface
+type compatresult struct {
+	Sn string
+	GivenName string
+	TelephoneNumber string
+	Telephonenumber string
+	CuMiddlename string
+	Uid string
+	Firstname string
+	DepartmentNumber string
+	ObjectClass string
+	Lastname string
+	Title string
+	Mail string
+	Campusphone string
+	Uni string
+	PostalAddress string
+	Ou string
+	Cn string
+	Found bool
+}
+
 
 func main () {
 	if len(os.Args) < 2 {
@@ -119,24 +113,41 @@ func main () {
 
 	r := struct_query(db, base_dn, ur)
 
-	fmt.Printf("%v\n",r)
-//	fmt.Printf("%v\n",channel_query(db, base_dn, ur))
-//	fmt.Printf("%v\n",slice_query(db, base_dn, ur))
-//	fmt.Printf("%v\n",func_query(db, base_dn, ur)) // only works with patched goldap
+	or := compatresult{}
+	or.Sn = r.Sn
+	or.GivenName = r.GivenName
+	or.TelephoneNumber = r.TelephoneNumber
+	or.CuMiddlename = r.CuMiddlename
+	or.Uid = strings.Join(r.Uid, ", ")
+	or.Firstname = r.Firstname
+	or.DepartmentNumber = r.DepartmentNumber
+	or.ObjectClass = strings.Join(r.ObjectClass, ", ")
+	or.Lastname = r.Lastname
+	or.Title = r.Title
+	or.Mail = r.Mail
+	or.Campusphone = r.Campusphone
+	or.Uni = r.Uni
+	or.PostalAddress = r.PostalAddress
+	or.Ou = r.Ou
+	or.Cn = r.Cn
+	or.Found = true
 
+	// duplicating the logic from previous python versions
+	// this looks a bit silly, but ensures that we are generating
+	// as close as possible to the previous output
+	if r.Sn != "" {
+		or.Lastname = r.Sn
+	}
+	if r.GivenName != "" {
+		or.Firstname = r.GivenName
+	}
+	if r.TelephoneNumber != "" {
+		or.Telephonenumber = r.TelephoneNumber
+	}
+	if or.Lastname == "" {
+		// at least put a UNI in there
+		or.Lastname = uni
+	}
 
-    //             for k, v in values.items():
-    //                 results_dict[k] = ", ".join(v)
-    //                 if k == 'sn':
-    //                     results_dict['lastname'] = v[0]
-    //                 if k == 'givenname':
-    //                     results_dict['firstname'] = v[0]
-    //                 if k == 'givenName':
-    //                     results_dict['firstname'] = v[0]
-    //                 if k == 'telephoneNumber':
-    //                     results_dict['telephonenumber'] = v[0]
-
-    // if results_dict['lastname'] == "":
-    //     results_dict['lastname'] = uni
-
+	fmt.Printf("%v\n",or)
 }
