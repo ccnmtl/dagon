@@ -1,31 +1,31 @@
 package main
 
 import (
-	"github.com/jmckaskill/goldap"
 	"encoding/json"
 	"fmt"
+	"github.com/jmckaskill/goldap"
 	"os"
 	"strings"
 )
 
 // this is the struct for pulling results out of LDAP
 type result struct {
-	Sn string
-	GivenName string
-	TelephoneNumber string
-	CuMiddlename string
-	Uid []string
-	Firstname string
+	Sn               string
+	GivenName        string
+	TelephoneNumber  string
+	CuMiddlename     string
+	Uid              []string
+	Firstname        string
 	DepartmentNumber string
-	ObjectClass []string
-	Lastname string
-	Title string
-	Mail string
-	Campusphone string
-	Uni string
-	PostalAddress string
-	Ou string
-	Cn string
+	ObjectClass      []string
+	Lastname         string
+	Title            string
+	Mail             string
+	Campusphone      string
+	Uni              string
+	PostalAddress    string
+	Ou               string
+	Cn               string
 }
 
 func struct_query(db *ldap.DB, base_dn ldap.ObjectDN, ur ldap.Equal) result {
@@ -40,41 +40,40 @@ func struct_query(db *ldap.DB, base_dn ldap.ObjectDN, ur ldap.Equal) result {
 
 // this struct is set up to match our old interface
 type compatresult struct {
-	Sn string `json:"sn"`
-	GivenName string `json:"givenName"`
-	TelephoneNumber string `json:"telephoneNumber"`
-	Telephonenumber string `json:"telephonenumber"`
-	CuMiddlename string `json:"cuMiddlename"`
-	Uid string `json:"uid"`
-	Firstname string `json:"firstname"`
+	Sn               string `json:"sn"`
+	GivenName        string `json:"givenName"`
+	TelephoneNumber  string `json:"telephoneNumber"`
+	Telephonenumber  string `json:"telephonenumber"`
+	CuMiddlename     string `json:"cuMiddlename"`
+	Uid              string `json:"uid"`
+	Firstname        string `json:"firstname"`
 	DepartmentNumber string `json:"departmentNumber"`
-	ObjectClass string `json:"objectClass"`
-	Lastname string `json:"lastname"`
-	Title string `json:"title"`
-	Mail string `json:"mail"`
-	Campusphone string `json:"campusphone"`
-	Uni string `json:"uni"`
-	PostalAddress string `json:"postalAddress"`
-	Ou string `json:"ou"`
-	Cn string `json:"cn"`
-	Found bool `json:"found"`
+	ObjectClass      string `json:"objectClass"`
+	Lastname         string `json:"lastname"`
+	Title            string `json:"title"`
+	Mail             string `json:"mail"`
+	Campusphone      string `json:"campusphone"`
+	Uni              string `json:"uni"`
+	PostalAddress    string `json:"postalAddress"`
+	Ou               string `json:"ou"`
+	Cn               string `json:"cn"`
+	Found            bool   `json:"found"`
 }
 
-
-func main () {
+func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("must specify a UNI")
 		return
 	}
 	uni := os.Args[1]
 
-	auth := make([]ldap.AuthMechanism,1)
-	auth[0] = ldap.SimpleAuth{User:"",Pass:""}
-	cfg := ldap.ClientConfig{Dial:nil,Auth:auth,TLS:nil}
+	auth := make([]ldap.AuthMechanism, 1)
+	auth[0] = ldap.SimpleAuth{User: "", Pass: ""}
+	cfg := ldap.ClientConfig{Dial: nil, Auth: auth, TLS: nil}
 
 	db := ldap.Open("ldap://ldap.columbia.edu", &cfg)
 	base_dn := ldap.ObjectDN("o=Columbia University, c=us")
-	ur := ldap.Equal{Attr:"uni",Value:[]byte(uni)}
+	ur := ldap.Equal{Attr: "uni", Value: []byte(uni)}
 
 	r := struct_query(db, base_dn, ur)
 
@@ -116,7 +115,7 @@ func main () {
 
 	b, err := json.Marshal(or)
 	if err != nil {
-    fmt.Println("error:", err)
+		fmt.Println("error:", err)
 	}
 	os.Stdout.Write(b)
 }
